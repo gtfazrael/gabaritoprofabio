@@ -1,46 +1,35 @@
-name: Gerar APK Android
+steps:
+  - name: 📥 Baixar o código do repositório
+    uses: actions/checkout@v4
 
-# Isso permite que você aperte um botão para rodar o robô quando quiser
-on:
-  workflow_dispatch: 
+  - name: 🟢 Preparar o Node.js
+    uses: actions/setup-node@v4
+    with:
+      node-version: '18'
 
-jobs:
-  build-android:
-    name: Compilar APK
-    runs-on: ubuntu-latest
+  - name: ☕ Preparar o Java (Android Studio)
+    uses: actions/setup-java@v4
+    with:
+      distribution: 'zulu'
+      java-version: '17'
 
-    steps:
-      - name: 📥 Baixar o código do repositório
-        uses: actions/checkout@v3
+  - name: 📦 Instalar dependências do projeto
+    run: npm install
 
-      - name: 🟢 Preparar o Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
+  - name: 🏗️ Construir o aplicativo Web (React)
+    run: npm run build
 
-      - name: ☕ Preparar o Java (Android Studio)
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'zulu'
-          java-version: '17'
+  - name: 📱 Converter para Android (Capacitor)
+    run: |
+      npx cap add android || true
+      npx cap sync android
 
-      - name: 📦 Instalar dependências do projeto
-        run: npm install
+  - name: ⚙️ Gerar o arquivo .APK
+    working-directory: ./android
+    run: bash ./gradlew assembleDebug
 
-      - name: 🏗️ Construir o aplicativo Web (React)
-        run: npm run build
-
-      - name: 📱 Converter para Android (Capacitor)
-        run: |
-          npx cap add android || true
-          npx cap sync android
-
-      - name: ⚙️ Gerar o arquivo .APK
-        working-directory: ./android
-        run: bash ./gradlew assembleDebug
-
-      - name: 🚀 Entregar o APK pronto
-        uses: actions/upload-artifact@v3
-        with:
-          name: GabaritoPro-App
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+  - name: 🚀 Entregar o APK pronto
+    uses: actions/upload-artifact@v4
+    with:
+      name: GabaritoPro-App
+      path: android/app/build/outputs/apk/debug/app-debug.apk
